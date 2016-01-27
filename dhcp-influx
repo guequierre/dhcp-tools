@@ -21,7 +21,6 @@ foreach($dataset as $name=>$pool){
   $opts = array('http' => array( 'method'  => 'POST', 'header'  => "Content-Type: application/x-www-form-urlencoded\r\n", 'content' => $postdata, 'timeout' => 60 ) );
   $context  = stream_context_create($opts);
   $url = influxserver."/write?db=".influxdb;
-  $result = file_get_contents($url, false, $context, -1, 40000); 
-  print_r($result);
+  file_get_contents($url, false, $context, -1, 40000); 
 }
 exit(0);
