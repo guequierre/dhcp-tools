@@ -1,13 +1,23 @@
 <?php
 // global settings
+// Main dhcpd configfile
 define('configfile','/etc/dhcp/dhcpd.conf');
+
+// Locations of the dhcpd.leases file
 define('leases','/var/lib/dhcp/dhcpd.leases');
+
+// Networks which need to be excluded from the monitoring. Format is |shared-network-name1|shared-network-name2| etc.
 define('networkexclude','|network1|network2|'); 
 
 // dhcp-icinga settings
+// warning threshold for icinga
 define('warn',90.0);
+
+// error threshold for icinga
 define('error',95.0);
 
 // dhcp-influx settings
+// influxdb server url 
 define('influxserver','http://localhost:8086');
+// database in influx
 define('influxdb','dhcpd');
