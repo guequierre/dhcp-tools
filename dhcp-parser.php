@@ -92,10 +92,6 @@ function fetchdata($configfile, $leases, $networkexclude) {
       $dataset[$network]['dhcpexpired']=0;
       $dataset[$network]['dhcpfree']=0;
       $dataset[$network]['dhcpreleased']=0;
-      if($network=="kr-dtc-lan") {
-        print_r($dataset[$network]);
-        print_r($pools);
-      }
 
       foreach($pools as $pool){
         $dataset[$network]['size']+=$pool[1]+1;
