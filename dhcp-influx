@@ -1,0 +1,27 @@
+#!/usr/bin/php
+<?php
+include("dhcp-parser.php");
+if(is_file("/etc/dhcp-tools.conf")){
+  include("/etc/dhcp-tools.conf");
+} else {
+  define('configfile','/etc/dhcp/dhcpd.conf');
+  define('leases','/var/lib/dhcp/dhcpd.leases');
+  define('networkexclude','||');
+  define('influxserver','http://localhost:8086');
+  define('influxdb','dhcpd');
+}
+
+$dataset=fetchdata(configfile,leases,networkexclude);
+
+foreach($dataset as $name=>$pool){
+  $postdata="";
+  foreach($pool as $key=>$value){
+    $postdata.="dhcpd,network=$name,key=$key value=$value\n";
+  }  
+  $opts = array('http' => array( 'method'  => 'POST', 'header'  => "Content-Type: application/x-www-form-urlencoded\r\n", 'content' => $postdata, 'timeout' => 60 ) );
+  $context  = stream_context_create($opts);
+  $url = influxserver."/write?db=".influxdb;
+  $result = file_get_contents($url, false, $context, -1, 40000); 
+  print_r($result);
+}
+exit(0);

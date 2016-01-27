@@ -1,0 +1,38 @@
+#!/usr/bin/php
+<?php
+include("dhcp-parser.php");
+if(is_file("/etc/dhcp-tools.conf")){
+  include("/etc/dhcp-tools.conf");
+} else {
+  define('configfile','/etc/dhcp/dhcpd.conf');
+  define('leases','/var/lib/dhcp/dhcpd.leases');
+  define('networkexclude','||');
+  define('error',90);
+  define('warn',85);
+}
+
+$dataset=fetchdata(configfile,leases,networkexclude);
+
+$poolwarning="";
+$poolerror="";
+
+foreach($dataset as $name=>$pool){
+  // $name=strtr($name,"-","_"); geen idee waarom ik dit had
+  if($pool['dhcptotal']!=0) {
+    $value=((($pool['dhcptotal']-$pool['dhcpfree']-$pool['dhcpbackup'])/$pool['dhcptotal'])*100);
+    if($value>error){
+      $poolerror.=sprintf("%s: %.2f%% ",$name,$value);
+    } else {
+      if($value>warn){
+        $poolwarning.=sprintf("%s: %.2f%% ",$name,$value);
+      }
+    }
+  }  
+}
+
+if($poolwarning!="") echo "warning: $poolwarning ";
+if($poolerror!="") echo "error: $poolerror ";
+if($poolwarning=="" and $poolerror=="") echo "dhcp pools are ok";
+if($poolerror!="") exit(2);
+if($poolwarning!="") exit(1);  
+exit(0);

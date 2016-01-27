@@ -1,0 +1,76 @@
+#!/usr/bin/php
+<?php
+include("dhcp-parser.php");
+if(is_file("/etc/dhcp-tools.conf")){
+  include("/etc/dhcp-tools.conf");
+} else {
+  define('configfile','/etc/dhcp/dhcpd.conf');
+  define('leases','/var/lib/dhcp/dhcpd.leases');
+  define('networkexclude','||');
+}
+
+if(isset($argv[1])) {
+  $cmd=$argv[1];
+} else {
+  $cmd="fetch";
+}
+
+$dataset=fetchdata(configfile,leases,networkexclude);
+
+switch($cmd){
+  case "config":
+    echo "multigraph dhcpdpools\n";
+    echo "graph_title DHCPD Pool usage in percentage\n";
+    echo "graph_args --upper-limit 100 -l 0\n";
+    echo "graph_vlabel %\n";
+    echo "graph_scale no\n";
+    echo "graph_category dhcp\n";
+    foreach($dataset as $name=>$pool){
+      if($pool['dhcptotal']>0){
+        $name=strtr($name,"-","_");
+        echo "$name.label $name\n";
+        echo "$name.warning 90\n";
+        echo "$name.critical 95\n";
+      }
+    }
+
+    foreach($dataset as $name=>$pool){
+      $name=strtr($name,"-","_");
+      echo "multigraph dhcpdpool_$name\n";
+      echo "graph_title $name poolsize: ".$pool['size']."/".$pool['dhcptotal']."\n";
+      echo "graph_args --upper-limit 100 -l 0\n";
+      echo "graph_vlabel %\n";
+      echo "graph_scale no\n";
+      echo "graph_category dhcp\n";
+      echo "overhead.label overhead\n";
+      echo "overhead.draw AREA\n";
+      echo "static.label static\n";
+      echo "static.draw STACK\n";
+      echo "dhcpused.label dhcpused\n";
+      echo "dhcpused.draw STACK\n";
+      echo "dhcpfree.label dhcpfree\n";
+      echo "dhcpfree.draw STACK\n";
+      echo "free.label free\n";
+      echo "free.draw STACK\n";
+    }
+    break;
+  case "fetch":
+    echo "multigraph dhcpdpools\n";
+    foreach($dataset as $name=>$pool){
+      $name=strtr($name,"-","_");
+      if($pool['dhcptotal']!=0) {
+        $value=((($pool['dhcptotal']-$pool['dhcpfree']-$pool['dhcpbackup'])/$pool['dhcptotal'])*100);
+        echo "$name.value $value\n";
+      }
+    }
+    foreach($dataset as $name=>$pool){
+      $name=strtr($name,"-","_");
+      echo "multigraph dhcpdpool_$name\n";
+      echo "overhead.value ".((($pool['network']+$pool['broadcast']+$pool['gateway'])/$pool['size'])*100)."\n";
+      echo "static.value ".(($pool['static']/$pool['size'])*100)."\n";
+      echo "dhcpused.value ".(($pool['dhcptotal']-$pool['dhcpfree']-$pool['dhcpbackup'])/$pool['size']*100) ."\n";
+      echo "dhcpfree.value ".(($pool['dhcpfree']+$pool['dhcpbackup'])/$pool['size']*100) ."\n";
+      echo "free.value ".(($pool['free']/$pool['size'])*100)."\n";
+    }
+    break;
+}

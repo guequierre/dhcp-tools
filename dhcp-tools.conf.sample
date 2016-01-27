@@ -1,0 +1,13 @@
+<?php
+// global settings
+define('configfile','/etc/dhcp/dhcpd.conf');
+define('leases','/var/lib/dhcp/dhcpd.leases');
+define('networkexclude','|network1|network2|'); 
+
+// dhcp-icinga settings
+define('warn',90.0);
+define('error',95.0);
+
+// dhcp-influx settings
+define('influxserver','http://localhost:8086');
+define('influxdb','dhcpd');
