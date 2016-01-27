@@ -25,9 +25,7 @@ function fetchdata($configfile, $leases, $networkexclude) {
             }
             break;
           case "shared-network":
-            if(!strstr(networkexclude,"|".$data[1]."|")){
-              $network=$data[1];
-            }
+            $network=$data[1];
             break;
           case "subnet":
             $base=ip2long($data[1]);
@@ -80,56 +78,62 @@ function fetchdata($configfile, $leases, $networkexclude) {
   }
 
   foreach($networks as $network=>$pools) {
-    $dataset[$network]['size']=0;
-    $dataset[$network]['free']=0;
-    $dataset[$network]['network']=0;
-    $dataset[$network]['broadcast']=0;
-    $dataset[$network]['gateway']=0;
-    $dataset[$network]['static']=0;
-    $dataset[$network]['dhcptotal']=0;
-    $dataset[$network]['dhcpabandoned']=0;
-    $dataset[$network]['dhcpactive']=0;
-    $dataset[$network]['dhcpbackup']=0;
-    $dataset[$network]['dhcpexpired']=0;
-    $dataset[$network]['dhcpfree']=0;
-    $dataset[$network]['dhcpreleased']=0;
+    if(!strstr(networkexclude,"|$network|")){
+      $dataset[$network]['size']=0;
+      $dataset[$network]['free']=0;
+      $dataset[$network]['network']=0;
+      $dataset[$network]['broadcast']=0;
+      $dataset[$network]['gateway']=0;
+      $dataset[$network]['static']=0;
+      $dataset[$network]['dhcptotal']=0;
+      $dataset[$network]['dhcpabandoned']=0;
+      $dataset[$network]['dhcpactive']=0;
+      $dataset[$network]['dhcpbackup']=0;
+      $dataset[$network]['dhcpexpired']=0;
+      $dataset[$network]['dhcpfree']=0;
+      $dataset[$network]['dhcpreleased']=0;
+      if($network=="kr-dtc-lan") {
+        print_r($dataset[$network]);
+        print_r($pools);
+      }
 
-    foreach($pools as $pool){
-      $dataset[$network]['size']+=$pool[1]+1;
-      for($i=$pool[0];$i<=$pool[0]+$pool[1];$i++) {
-        if(isset($ips[$i]['type'])) {
-          switch($ips[$i]['type']){
-            case "network":
-              $dataset[$network]['network']++;
-              break;
-            case "broadcast":
-              $dataset[$network]['broadcast']++;
-              break;
-            case "gateway":
-              $dataset[$network]['gateway']++;
-              break;
-            case "fixed-address":
-              $dataset[$network]['static']++;
-              break;
-            case "dhcp":
-              $dataset[$network]['dhcptotal']++;
-              if(isset($ips[$i]['state'])) {
-                switch($ips[$i]['state']) {
-                  case "abandoned;": $dataset[$network]['dhcpabandoned']++; break;
-                  case "active;":	  $dataset[$network]['dhcpactive']++; break;
-                  case "backup;":    $dataset[$network]['dhcpbackup']++; break;
-                  case "expired;":	  $dataset[$network]['dhcpexpired']++; break;
-                  case "free;":	  $dataset[$network]['dhcpfree']++; break;
-                  case "released;":  $dataset[$network]['dhcpreleased']++; break;
-                }
-              } else { $dataset[$network]['dhcpfree']++; }
-              break;
+      foreach($pools as $pool){
+        $dataset[$network]['size']+=$pool[1]+1;
+        for($i=$pool[0];$i<=$pool[0]+$pool[1];$i++) {
+          if(isset($ips[$i]['type'])) {
+            switch($ips[$i]['type']){
+              case "network":
+                $dataset[$network]['network']++;
+                break;
+              case "broadcast":
+                $dataset[$network]['broadcast']++;
+                break;
+              case "gateway":
+                $dataset[$network]['gateway']++;
+                break;
+              case "fixed-address":
+                $dataset[$network]['static']++;
+                break;
+              case "dhcp":
+                $dataset[$network]['dhcptotal']++;
+                if(isset($ips[$i]['state'])) {
+                  switch($ips[$i]['state']) {
+                    case "abandoned;": $dataset[$network]['dhcpabandoned']++; break;
+                    case "active;":    $dataset[$network]['dhcpactive']++; break;
+                    case "backup;":    $dataset[$network]['dhcpbackup']++; break;
+                    case "expired;":   $dataset[$network]['dhcpexpired']++; break;
+                    case "free;":      $dataset[$network]['dhcpfree']++; break;
+                    case "released;":  $dataset[$network]['dhcpreleased']++; break;
+                  }
+                } else { $dataset[$network]['dhcpfree']++; }
+                break;
+            }
+          } else { 
+            $dataset[$network]['free']++; 
           }
-        } else { 
-          $dataset[$network]['free']++; 
         }
       }
     }
-  }  
+  }
   return($dataset);
 }
