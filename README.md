@@ -21,7 +21,8 @@ It will parse the dhcp files and outputs the statistics to the influx server whi
 It can be run from a cronjob. 
 
 #### dhcp-munin
-Create a symlink to dhcp-munin in /etc/munin/plugins and restart munin-node.
+Create a symlink to dhcp-munin in /etc/munin/plugins and restart munin-node. If all works well it should creates a graph like this:
+![munin graph](https://raw.githubusercontent.com/guequierre/dhcp-tools/master/docs/munin.png "munin graph")
 
 #### dhcp-tools.conf
 The tools will look for /etc/dhcp-tools.conf, if not found it will use the default settings. 
