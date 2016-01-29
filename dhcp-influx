@@ -15,12 +15,12 @@ $dataset=fetchdata(configfile,leases,networkexclude);
 
 foreach($dataset as $name=>$pool){
   $postdata="";
+  $pool['dhcpoverhead']=$pool['network']+$pool['broadcast']+$pool['gateway'];
+  $pool['dhcpused']=$pool['dhcptotal']-$pool['dhcpfree']-$pool['dhcpbackup'];
+  $pool['dhcpavailable']=$pool['dhcpfree']+$pool['dhcpbackup'];
   foreach($pool as $key=>$value){
     $postdata.="dhcpd,network=$name,key=$key value=$value\n";
   }
-  $postdata.="dhcpd,network=$name,key=dhcpoverhead value=".$pool['network']+$pool['broadcast']+$pool['gateway']."\n";
-  $postdata.="dhcpd,network=$name,key=dhcpused value=".$pool['dhcptotal']-$pool['dhcpfree']-$pool['dhcpbackup']."\n";
-  $postdata.="dhcpd,network=$name,key=dhcpavailable value=".$pool['dhcpfree']+$pool['dhcpbackup']."\n";
 
   $opts = array('http' => array( 'method'  => 'POST', 'header'  => "Content-Type: application/x-www-form-urlencoded\r\n", 'content' => $postdata, 'timeout' => 60 ) );
   $context  = stream_context_create($opts);
