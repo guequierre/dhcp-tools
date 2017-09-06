@@ -11,22 +11,29 @@ if(is_file("/etc/dhcp-tools.conf")){
   define('influxdb','dhcpd');
 }
 
-$hostname=gethostname();
+// check if influxserver is reachable
+if(file_get_contents(influxserver)){
 
-$dataset=fetchdata(configfile,leases,networkexclude);
+  $hostname=gethostname();
 
-foreach($dataset as $name=>$pool){
-  $postdata="";
-  $pool['dhcpoverhead']=$pool['network']+$pool['broadcast']+$pool['gateway'];
-  $pool['dhcpused']=$pool['dhcptotal']-$pool['dhcpfree']-$pool['dhcpbackup'];
-  $pool['dhcpavailable']=$pool['dhcpfree']+$pool['dhcpbackup'];
-  foreach($pool as $key=>$value){
-    $postdata.="dhcpd,network=$name,key=$key,host=$hostname value=$value\n";
+  $dataset=fetchdata(configfile,leases,networkexclude);
+
+  foreach($dataset as $name=>$pool){
+    $postdata="";
+    $pool['dhcpoverhead']=$pool['network']+$pool['broadcast']+$pool['gateway'];
+    $pool['dhcpused']=$pool['dhcptotal']-$pool['dhcpfree']-$pool['dhcpbackup'];
+    $pool['dhcpavailable']=$pool['dhcpfree']+$pool['dhcpbackup'];
+    foreach($pool as $key=>$value){
+      $postdata.="dhcpd,network=$name,key=$key,host=$hostname value=$value\n";
+    }
+    
+    $opts = array('http' => array( 'method'  => 'POST', 'header'  => "Content-Type: application/x-www-form-urlencoded\r\n", 'content' => $postdata, 'timeout' => 60 ) );
+    $context  = stream_context_create($opts);
+    $url = influxserver."/write?db=".influxdb;
+    file_get_contents($url, false, $context, -1, 40000); 
   }
-
-  $opts = array('http' => array( 'method'  => 'POST', 'header'  => "Content-Type: application/x-www-form-urlencoded\r\n", 'content' => $postdata, 'timeout' => 60 ) );
-  $context  = stream_context_create($opts);
-  $url = influxserver."/write?db=".influxdb;
-  file_get_contents($url, false, $context, -1, 40000); 
-}
-exit(0);
+  exit(0);
+} else {
+  echo "Influxserver: " . influxserver . " is down!";
+  exit(1);
+ }
