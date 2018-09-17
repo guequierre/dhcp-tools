@@ -17,11 +17,18 @@ $dataset=fetchdata(configfile,leases,networkexclude);
 
 foreach($dataset as $name=>$pool){
   $postdata="";
+  $nameparts=explode("-",$name);
+  $np=0;
+  $nps="";
+  foreach($nameparts as $namepart){
+	$np++;
+	$nps.=",networkpart$np=$namepart";
+  }
   $pool['dhcpoverhead']=$pool['network']+$pool['broadcast']+$pool['gateway'];
   $pool['dhcpused']=$pool['dhcptotal']-$pool['dhcpfree']-$pool['dhcpbackup'];
   $pool['dhcpavailable']=$pool['dhcpfree']+$pool['dhcpbackup'];
   foreach($pool as $key=>$value){
-    $postdata.="dhcpd,network=$name,key=$key,host=$hostname value=$value\n";
+    $postdata.="dhcpd,network=$name,key=$key,host=$hostname$nps value=$value\n";
   }
 
   $opts = array('http' => array( 'method'  => 'POST', 'header'  => "Content-Type: application/x-www-form-urlencoded\r\n", 'content' => $postdata, 'timeout' => 60 ) );
