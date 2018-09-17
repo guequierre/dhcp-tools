@@ -7,14 +7,30 @@ if(is_file("/etc/dhcp-tools.conf")){
   define('configfile','/etc/dhcp/dhcpd.conf');
   define('leases','/var/lib/dhcp/dhcpd.leases');
   define('networkexclude','||');
-  define('error',90);
-  define('warn',85);
+  define('aggregatelans','w-lan-core');
+  define('error',50);
+  define('warn',35);
 }
 
 $dataset=fetchdata(configfile,leases,networkexclude);
 
 $poolwarning="";
 $poolerror="";
+
+// aggregate networks
+$lans=array_keys($dataset);
+foreach(explode(",",aggregatelans) as $lan){
+  $dataset[$lan]=array();
+  foreach(preg_grep("/^$lan.+/",$lans) as $lanname){
+    foreach($dataset[$lanname] as $key=>$value){
+      if(!isset($dataset[$lan][$key])){
+	$dataset[$lan][$key]=0;
+      }
+      $dataset[$lan][$key]+=$value;
+    }
+    unset($dataset[$lanname]);
+  }
+}
 
 foreach($dataset as $name=>$pool){
   // $name=strtr($name,"-","_"); geen idee waarom ik dit had
